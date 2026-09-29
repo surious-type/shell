@@ -28,7 +28,7 @@ void print_list(list *head)
 {
 	while (head != NULL)
 	{
-		printf("%s\n", head->word);
+		printf("[%s]\n", head->word);
 		head = head->next;
 	}
 }
@@ -119,9 +119,9 @@ static void append_token(list **head, const char *word)
 	current->next = node;
 }
 
-static int flush_buffer(list **head, char **buf, size_t *len, size_t *capacity)
+static int flush_buffer(list **head, char **buf, size_t *len, size_t *capacity, int *token_started)
 {
-	if (*len == 0)
+	if (!*token_started)
 		return 1;
 
 	if (!buffer_finish(buf, len, capacity))
@@ -129,6 +129,8 @@ static int flush_buffer(list **head, char **buf, size_t *len, size_t *capacity)
 
 	append_token(head, *buf);
 	buffer_reset(buf, len, capacity);
+
+	*token_started = 0;
 
 	return 1;
 }
@@ -148,17 +150,11 @@ void build_list(list **head, const char *s)
 		{
 			if (*s == quote)
 			{
-				if (len == 0 && token_started == 1)
-				{
-					char tmp[2];
-					tmp[0] = quote;
-					tmp[1] = quote;
-					append_token(head, tmp);
-				}
 				quote = '\0';
 			}
 			else
 			{
+				token_started = 1;
 				buffer_push(&buf, &len, &capacity, *s);
 			}
 		}
@@ -169,16 +165,16 @@ void build_list(list **head, const char *s)
 		}
 		else if (*s == ' ' || *s == '\t')
 		{
-			if (len > 0)
+			if (token_started)
 			{
-				flush_buffer(head, &buf, &len, &capacity);
+				flush_buffer(head, &buf, &len, &capacity, &token_started);
 			}
 		}
 		else if (is_special(*s))
 		{
-			if (len > 0)
+			if (token_started)
 			{
-				flush_buffer(head, &buf, &len, &capacity);
+				flush_buffer(head, &buf, &len, &capacity, &token_started);
 			}
 			char tmp[3];
 			tmp[0] = *s;
@@ -196,6 +192,7 @@ void build_list(list **head, const char *s)
 		}
 		else
 		{
+			token_started = 1;
 			buffer_push(&buf, &len, &capacity, *s);
 		}
 		s++;
@@ -205,11 +202,12 @@ void build_list(list **head, const char *s)
 	{
 		fprintf(stderr, "lexical error: не закрыта кавычка\n");
 		buffer_reset(&buf, &len, &capacity);
+		free_list(head);
 		return;
 	}
-	if (len > 0)
+	if (token_started)
 	{
-		flush_buffer(head, &buf, &len, &capacity);
+		flush_buffer(head, &buf, &len, &capacity, &token_started);
 	}
 }
 
