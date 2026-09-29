@@ -238,7 +238,7 @@ tree *com_list(void)
 
 		plst = plst->next;
 
-		if (plst == NULL)
+		if (plst == NULL || strcmp(plst->word, ")") == 0)
 		{
 			// если завершающий ; считается нормой, то break, иначе нужно выдавать ошибку
 			break;

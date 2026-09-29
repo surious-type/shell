@@ -23,7 +23,7 @@ void handler(int s)
 
 int main(void)
 {
-	const char *line = "(cat -n ; grep hello) < input.txt >> result.txt";
+	const char *line = "pwd && )";
 	list *tokens = NULL;
 	build_list(&tokens, line);
 	plst = tokens;
