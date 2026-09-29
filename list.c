@@ -230,5 +230,24 @@ void build_list(list **head, const char *s)
 
 void change_list(list *head)
 {
-	(void)head;
+	while (head != NULL)
+	{
+		if (strcmp(head->word, "$HOME") == 0)
+		{
+			const char *home = getenv("HOME");
+
+			if (home != NULL)
+			{
+				char *new_home = copy_string(home);
+				if (new_home == NULL)
+				{
+					continue;
+				}
+				free(head->word);
+				head->word = new_home;
+			}
+		}
+
+		head = head->next;
+	}
 }
