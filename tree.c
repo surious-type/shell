@@ -161,8 +161,38 @@ void init_com(tree *cmd)
 	cmd->next = NULL;
 }
 tree *com_sh(void);
-tree *com_list(void);
+tree *com_list(void)
+{
+	tree *head = conv();
 
+	if (head == NULL)
+		return NULL;
+
+	tree *current = head;
+
+	while (plst != NULL && strcmp(plst->word, ";") == 0)
+	{
+		plst = plst->next;
+
+		if (plst->next == NULL)
+		{
+			// если завершающий ; считается нормой, то break, иначе нужно выдавать ошибку
+			break;
+		}
+		tree *next_conv = conv();
+
+		if (next_conv == NULL)
+		{
+			clear_tree(head);
+			return NULL;
+		}
+
+		current->next = next_conv;
+		current = next_conv;
+	}
+
+	return head;
+}
 tree *conv(void)
 {
 	tree *head = command();
@@ -184,6 +214,7 @@ tree *conv(void)
 		tree *next_cmd = command();
 		if (next_cmd == NULL)
 		{
+			clear_tree(head);
 			return NULL;
 		}
 
@@ -260,49 +291,54 @@ void print_struct(tree *head)
 	if (head == NULL)
 		return;
 
-	for (int n = 1; head != NULL; n++)
+	for (int i = 1; head != NULL; i++)
 	{
-		printf("Команда: %d:\n", n);
-		for (size_t i = 0; head->argv != NULL && head->argv[i] != NULL; i++)
+		printf("Список %d:\n", i);
+		tree *cmd = head;
+		for (int j = 1; cmd != NULL; j++)
 		{
-			printf("    argv[%zu] = [%s]\n", i, head->argv[i]);
+			printf("    Команда: %d:\n", j);
+			for (size_t a = 0; cmd->argv != NULL && cmd->argv[a] != NULL; a++)
+			{
+				printf("        argv[%zu] = [%s]\n", a, cmd->argv[a]);
+			}
+			if (cmd->infile != NULL)
+			{
+				printf("        infile = [%s]\n", cmd->infile);
+			}
+			if (cmd->outfile != NULL)
+			{
+				printf("        outfile = [%s]\n", cmd->outfile);
+			}
+			if (cmd->append)
+			{
+				printf("        append = [%d]\n", cmd->append);
+			}
+			cmd = cmd->pipe;
 		}
-		if (head->infile != NULL)
-		{
-			printf("    infile = [%s]\n", head->infile);
-		}
-		if (head->outfile != NULL)
-		{
-			printf("    outfile = [%s]\n", head->outfile);
-		}
-		if (head->append)
-		{
-			printf("    append = [%d]\n", head->append);
-		}
-		head = head->pipe;
+		head = head->next;
 	}
 }
 void clear_tree(tree *head)
 {
-	while (head != NULL)
+	if (head == NULL)
+		return;
+
+	clear_tree(head->pipe);
+	clear_tree(head->next);
+
+	if (head->argv != NULL)
 	{
-		tree *next = head->pipe;
-
-		if (head->argv != NULL)
+		for (size_t i = 0; head->argv[i] != NULL; i++)
 		{
-			for (size_t i = 0; head->argv[i] != NULL; i++)
-			{
-				free(head->argv[i]);
-			}
-
-			free(head->argv);
+			free(head->argv[i]);
 		}
 
-		free(head->infile);
-		free(head->outfile);
-
-		free(head);
-
-		head = next;
+		free(head->argv);
 	}
+
+	free(head->infile);
+	free(head->outfile);
+
+	free(head);
 }

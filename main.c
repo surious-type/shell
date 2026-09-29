@@ -23,15 +23,15 @@ void handler(int s)
 
 int main(void)
 {
-	const char *line = "cat >";
+	const char *line = "echo hello | wc ; pwd ; ls -l";
 	list *tokens = NULL;
 	build_list(&tokens, line);
 	plst = tokens;
-	tree *cmd = conv();
+	tree *cmds = com_list();
 	print_list(tokens);
 	free_list(&tokens);
-	print_struct(cmd);
-	clear_tree(cmd);
+	print_struct(cmds);
+	clear_tree(cmds);
 
 	return 0;
 }
