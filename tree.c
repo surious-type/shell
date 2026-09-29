@@ -137,7 +137,23 @@ void init_com(tree *cmd)
 	cmd->pipe = NULL;
 	cmd->next = NULL;
 }
-tree *com_sh(void);
+tree *com_sh(void)
+{
+	tree *head = com_list();
+
+	if (head == NULL)
+		return NULL;
+
+	if (plst != NULL)
+	{
+		fprintf(stderr, "syntax error: неожиданная лексема [%s]\n", plst->word);
+
+		clear_tree(head);
+		return NULL;
+	}
+
+	return head;
+}
 static tree *and_or(void)
 {
 	tree *head = conv();
