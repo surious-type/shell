@@ -5,9 +5,6 @@
 #include <fcntl.h>
 #include <setjmp.h>
 #include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -24,14 +21,15 @@ void handler(int s)
 	signal(SIGINT, handler);
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
-	const char *line = "echo hello |world";
+	const char *line = "echo hello | world";
 
+	list *tokens = NULL;
 	build_list(&plst, line);
-
-	tree *cmd = simple_com();
-	free_list(&plst);
+	plst = tokens;
+	tree *cmd = conv();
+	free_list(&tokens);
 	print_struct(cmd);
 
 	return 0;

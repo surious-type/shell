@@ -83,8 +83,41 @@ void init_com(tree *cmd)
 }
 tree *com_sh(void);
 tree *com_list(void);
-tree *conv(void);
-tree *command(void);
+
+tree *conv(void)
+{
+	tree *head = command();
+
+	if (head == NULL)
+		return NULL;
+
+	tree *current = head;
+	tree *next_cmd;
+
+	while (plst != NULL && strcmp(plst->word, "|") == 0)
+	{
+		plst = plst->next;
+		if (plst == NULL)
+		{
+			fprintf(stderr, "syntax error: ожидалась команда после |\n");
+			return NULL;
+		}
+		tree *next_cmd = command();
+		if (next_cmd == NULL)
+		{
+			return NULL;
+		}
+
+		current->pipe = next_cmd;
+		current = next_cmd;
+	}
+	return head;
+}
+
+tree *command(void)
+{
+	return simple_com();
+}
 
 tree *simple_com(void)
 {
@@ -116,9 +149,14 @@ void print_struct(tree *head)
 	if (head == NULL)
 		return;
 
-	for (size_t i = 0; head->argv != NULL && head->argv[i] != NULL; i++)
+	for (int n = 1; head != NULL; n++)
 	{
-		printf("argv[%zu] = [%s]\n", i, head->argv[i]);
+		printf("Команда: %d:", n);
+		for (size_t i = 0; head->argv != NULL && head->argv[i] != NULL; i++)
+		{
+			printf("argv[%zu] = [%s]\n", i, head->argv[i]);
+		}
+		head = head->next;
 	}
 }
 void clear_tree(tree *);
