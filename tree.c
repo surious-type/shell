@@ -174,6 +174,31 @@ static tree *and_or(void)
 
 	return head;
 }
+static void background_pipeline(tree *cmd)
+{
+	while (cmd != NULL)
+	{
+		cmd->backgrnd = 1;
+		cmd = cmd->pipe;
+	}
+}
+/*
+ * Выставить backgroud всем кто AND т.е. сгруппрованы
+ * */
+static void background_group(tree *first, tree *last)
+{
+	tree *current = first;
+
+	while (current != NULL)
+	{
+		background_pipeline(current);
+
+		if (current == last)
+			break;
+
+		current = current->next;
+	}
+}
 tree *com_list(void)
 {
 	tree *head = and_or();
@@ -182,12 +207,19 @@ tree *com_list(void)
 		return NULL;
 
 	tree *current = head;
+	tree *group_start = head;
+
 	while (current->next != NULL)
 	{
 		current = current->next;
 	}
-	while (plst != NULL && strcmp(plst->word, ";") == 0)
+	while (plst != NULL && (strcmp(plst->word, ";") == 0 || strcmp(plst->word, "&") == 0))
 	{
+		if (strcmp(plst->word, "&") == 0)
+		{
+			background_group(group_start, current);
+		}
+
 		plst = plst->next;
 
 		if (plst == NULL)
@@ -203,8 +235,16 @@ tree *com_list(void)
 			return NULL;
 		}
 
+		current->type = NXT;
 		current->next = next;
+
+		group_start = next;
 		current = next;
+
+		while (current->next != NULL)
+		{
+			current = current->next;
+		}
 	}
 
 	return head;
@@ -330,6 +370,7 @@ void print_struct(tree *head)
 			{
 				printf("        append = [%d]\n", cmd->append);
 			}
+			printf("        backgrnd = %d\n", cmd->backgrnd);
 			if (cmd->type == AND)
 				printf("        type = AND\n");
 			else if (cmd->type == OR)

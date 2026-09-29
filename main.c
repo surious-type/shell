@@ -23,7 +23,7 @@ void handler(int s)
 
 int main(void)
 {
-	const char *line = "echo A && echo B || echo C ; echo D";
+	const char *line = "a && b &";
 	list *tokens = NULL;
 	build_list(&tokens, line);
 	plst = tokens;
