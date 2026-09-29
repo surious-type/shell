@@ -1,4 +1,3 @@
-#define _POSIX_C_SOURCE 200809L
 #include "list.h"
 #include "buff.h"
 #include <fcntl.h>
