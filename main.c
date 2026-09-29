@@ -23,12 +23,12 @@ void handler(int s)
 
 int main(void)
 {
-	const char *line = "echo hello | world";
-
+	const char *line = "echo hello |  | cat";
 	list *tokens = NULL;
-	build_list(&plst, line);
+	build_list(&tokens, line);
 	plst = tokens;
 	tree *cmd = conv();
+	print_list(tokens);
 	free_list(&tokens);
 	print_struct(cmd);
 

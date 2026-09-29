@@ -92,12 +92,11 @@ tree *conv(void)
 		return NULL;
 
 	tree *current = head;
-	tree *next_cmd;
 
 	while (plst != NULL && strcmp(plst->word, "|") == 0)
 	{
 		plst = plst->next;
-		if (plst == NULL)
+		if (plst == NULL || strcmp(plst->word, "|") == 0)
 		{
 			fprintf(stderr, "syntax error: ожидалась команда после |\n");
 			return NULL;
@@ -156,7 +155,7 @@ void print_struct(tree *head)
 		{
 			printf("argv[%zu] = [%s]\n", i, head->argv[i]);
 		}
-		head = head->next;
+		head = head->pipe;
 	}
 }
 void clear_tree(tree *);
