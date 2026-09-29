@@ -23,7 +23,7 @@ void handler(int s)
 
 int main(void)
 {
-	const char *line = "a && b &";
+	const char *line = "a | b ; c && d | e & f || g";
 	list *tokens = NULL;
 	build_list(&tokens, line);
 	plst = tokens;

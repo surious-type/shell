@@ -174,7 +174,7 @@ static tree *and_or(void)
 
 	return head;
 }
-static void background_pipeline(tree *cmd)
+void background(tree *cmd)
 {
 	while (cmd != NULL)
 	{
@@ -183,15 +183,15 @@ static void background_pipeline(tree *cmd)
 	}
 }
 /*
- * Выставить backgroud всем кто AND т.е. сгруппрованы
+ * Выставить backgroud всем кто AND или OR т.е. сгруппрованы
  * */
-static void background_group(tree *first, tree *last)
+void background_sub(tree *first, tree *last)
 {
 	tree *current = first;
 
 	while (current != NULL)
 	{
-		background_pipeline(current);
+		background(current);
 
 		if (current == last)
 			break;
@@ -217,7 +217,7 @@ tree *com_list(void)
 	{
 		if (strcmp(plst->word, "&") == 0)
 		{
-			background_group(group_start, current);
+			background_sub(group_start, current);
 		}
 
 		plst = plst->next;

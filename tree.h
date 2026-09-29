@@ -33,7 +33,7 @@ void error(char *, char *);
 int is_oper(void);
 int is_next(void);
 int is_inout(void);
-void background_sub(tree *);
+void background_sub(tree *, tree *);
 void background(tree *);
 void init_com(tree *);
 tree *com_sh(void);
