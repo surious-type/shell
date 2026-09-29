@@ -130,7 +130,7 @@ int out_append(tree *cmd)
 
 	if (plst == NULL || is_oper())
 	{
-		fprintf(stderr, "syntax error: ожидалось имя файла после >\n");
+		fprintf(stderr, "syntax error: ожидалось имя файла после >>\n");
 		return 0;
 	}
 
@@ -277,4 +277,27 @@ void print_struct(tree *head)
 		head = head->pipe;
 	}
 }
-void clear_tree(tree *);
+void clear_tree(tree *head)
+{
+	while (head != NULL)
+	{
+		tree *next = head->pipe;
+
+		if (head->argv != NULL)
+		{
+			for (size_t i = 0; head->argv[i] != NULL; i++)
+			{
+				free(head->argv[i]);
+			}
+
+			free(head->argv);
+		}
+
+		free(head->infile);
+		free(head->outfile);
+
+		free(head);
+
+		head = next;
+	}
+}

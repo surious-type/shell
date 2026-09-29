@@ -31,6 +31,7 @@ int main(void)
 	print_list(tokens);
 	free_list(&tokens);
 	print_struct(cmd);
+	clear_tree(cmd);
 
 	return 0;
 }
