@@ -96,7 +96,7 @@ tree *conv(void)
 	while (plst != NULL && strcmp(plst->word, "|") == 0)
 	{
 		plst = plst->next;
-		if (plst == NULL || strcmp(plst->word, "|") == 0)
+		if (plst == NULL)
 		{
 			fprintf(stderr, "syntax error: ожидалась команда после |\n");
 			return NULL;
@@ -120,6 +120,11 @@ tree *command(void)
 
 tree *simple_com(void)
 {
+	if (plst == NULL || is_oper())
+	{
+		fprintf(stderr, "syntax error: ожидалось имя команды\n");
+		return NULL;
+	}
 	tree *cmd = malloc(sizeof(*cmd));
 
 	if (cmd == NULL)
