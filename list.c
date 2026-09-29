@@ -150,7 +150,7 @@ void build_list(list **head, const char *s)
 		{
 			if (s[1] == '\0')
 			{
-				fprintf(stderr, "lexical error: нет символа после \\\n");
+				fprintf(stderr, "lexical error: нет символа после обратного слеша\n");
 				buffer_reset(&buf, &len, &capacity);
 				free_list(head);
 				return;
@@ -158,6 +158,10 @@ void build_list(list **head, const char *s)
 			++s;
 			buffer_push(&buf, &len, &capacity, *s);
 			token_started = 1;
+		}
+		else if (quote == '\0' && *s == '#')
+		{
+			break;
 		}
 		else if (quote != '\0')
 		{
