@@ -1,6 +1,8 @@
+#define _POSIX_C_SOURCE 200809L
 #include "list.h"
 #include "buff.h"
 #include <fcntl.h>
+#include <limits.h>
 #include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -269,8 +271,23 @@ void change_list(list *head)
 		}
 		else if (strcmp(head->word, "$SHELL") == 0)
 		{
-			const char *shell = getenv("SHELL");
-			if (!replace_word(head, shell))
+			char path[1024];
+			ssize_t len = readlink("/proc/self/exe", path, sizeof(path) - 1);
+
+			if (len == -1)
+			{
+				perror("readlink error");
+			}
+
+			if ((size_t)len >= sizeof(path) - 1)
+			{
+				fprintf(stderr, "Путь к shell слишком длинный\n");
+				return;
+			}
+
+			path[len] = '\0';
+
+			if (!replace_word(head, path))
 				return;
 		}
 		head = head->next;

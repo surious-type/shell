@@ -26,7 +26,7 @@ void handler(int s)
 
 int main(int argc, char *argv[])
 {
-	const char *line = "$HOME $USER $EUID";
+	const char *line = "$HOME $USER $EUID $SHELL";
 	build_list(&plst, line);
 	print_list(plst);
 	change_list(plst);
