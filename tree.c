@@ -178,6 +178,7 @@ tree *conv(void)
 		if (plst == NULL)
 		{
 			fprintf(stderr, "syntax error: ожидалась команда после |\n");
+			clear_tree(head);
 			return NULL;
 		}
 		tree *next_cmd = command();
@@ -218,6 +219,7 @@ tree *simple_com(void)
 	{
 		if (!add_arg(cmd, plst->word))
 		{
+			clear_tree(cmd);
 			return NULL;
 		}
 
@@ -229,6 +231,7 @@ tree *simple_com(void)
 		{
 			if (!in_file(cmd))
 			{
+				clear_tree(cmd);
 				return NULL;
 			}
 		}
@@ -236,6 +239,7 @@ tree *simple_com(void)
 		{
 			if (!out_file(cmd))
 			{
+				clear_tree(cmd);
 				return NULL;
 			}
 		}
@@ -243,6 +247,7 @@ tree *simple_com(void)
 		{
 			if (!out_append(cmd))
 			{
+				clear_tree(cmd);
 				return NULL;
 			}
 		}
