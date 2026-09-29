@@ -228,6 +228,22 @@ void build_list(list **head, const char *s)
 	}
 }
 
+static int replace_word(list *node, const char *value)
+{
+	if (value == NULL)
+	{
+		return 0;
+	}
+	char *new_value = copy_string(value);
+	if (new_value == NULL)
+	{
+		return 0;
+	}
+	free(node->word);
+	node->word = new_value;
+	return 1;
+}
+
 void change_list(list *head)
 {
 	while (head != NULL)
@@ -235,19 +251,28 @@ void change_list(list *head)
 		if (strcmp(head->word, "$HOME") == 0)
 		{
 			const char *home = getenv("HOME");
-
-			if (home != NULL)
-			{
-				char *new_home = copy_string(home);
-				if (new_home == NULL)
-				{
-					return;
-				}
-				free(head->word);
-				head->word = new_home;
-			}
+			if (!replace_word(head, home))
+				return;
 		}
-
+		else if (strcmp(head->word, "$USER") == 0)
+		{
+			const char *user = getlogin();
+			if (!replace_word(head, user))
+				return;
+		}
+		else if (strcmp(head->word, "$EUID") == 0)
+		{
+			char euid[32];
+			snprintf(euid, sizeof(euid), "%lu", (unsigned long)geteuid());
+			if (!replace_word(head, euid))
+				return;
+		}
+		else if (strcmp(head->word, "$SHELL") == 0)
+		{
+			const char *shell = getenv("SHELL");
+			if (!replace_word(head, shell))
+				return;
+		}
 		head = head->next;
 	}
 }
