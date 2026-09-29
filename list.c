@@ -79,7 +79,7 @@ vertex word(char, int *, int *, list **, int *);
 vertex bracket(char, int *, int *, list **, int *);
 vertex spec(char, int *, int *, list **);
 
-static void append_token(list **head, char *word)
+static void append_token(list **head, const char *word)
 {
 	if (head == NULL || word == NULL)
 	{
@@ -140,6 +140,7 @@ void build_list(list **head, const char *s)
 	size_t capacity;
 	buffer_init(&buf, &len, &capacity);
 	char quote = '\0';
+	int token_started = 0;
 
 	while (*s)
 	{
@@ -147,6 +148,13 @@ void build_list(list **head, const char *s)
 		{
 			if (*s == quote)
 			{
+				if (len == 0 && token_started == 1)
+				{
+					char tmp[2];
+					tmp[0] = quote;
+					tmp[1] = quote;
+					append_token(head, tmp);
+				}
 				quote = '\0';
 			}
 			else
@@ -156,6 +164,7 @@ void build_list(list **head, const char *s)
 		}
 		else if (*s == '"' || *s == '\'')
 		{
+			token_started = 1;
 			quote = *s;
 		}
 		else if (*s == ' ' || *s == '\t')
@@ -194,9 +203,10 @@ void build_list(list **head, const char *s)
 
 	if (quote != '\0')
 	{
-		perror("lexical error");
+		fprintf(stderr, "lexical error: не закрыта кавычка\n");
+		buffer_reset(&buf, &len, &capacity);
+		return;
 	}
-
 	if (len > 0)
 	{
 		flush_buffer(head, &buf, &len, &capacity);
