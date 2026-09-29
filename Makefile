@@ -10,11 +10,11 @@ all: $(PROG)
 $(PROG): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $@
 
-main.o: main.c buff.h list.h tree.h exec.h
-string.o: string.c string.h
+main.o: main.c buff.h list.h tree.h exec.h strutils.h
+strutils.o: strutils.c strutils.h
 buff.o: buff.c buff.h
-list.o: list.c list.h buff.h string.h
-tree.o: tree.c tree.h list.h string.h
+list.o: list.c list.h buff.h strutils.h
+tree.o: tree.c tree.h list.h strutils.h
 exec.o: exec.c exec.h tree.h
 
 %.o: %.c

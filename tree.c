@@ -1,5 +1,5 @@
 #include "tree.h"
-#include "string.h"
+#include "strutils.h"
 #include <fcntl.h>
 #include <setjmp.h>
 #include <stdio.h>
@@ -56,6 +56,19 @@ static int add_arg(tree *cmd, const char *word)
 	return 1;
 }
 
+int is_oper(void)
+{
+	if (plst == NULL)
+		return 0;
+
+	const char *word = plst->word;
+
+	return strcmp(word, "|") == 0 || strcmp(word, ">") == 0 || strcmp(word, ">>") == 0 ||
+		   strcmp(word, "<") == 0 || strcmp(word, "&") == 0 || strcmp(word, "&&") == 0 ||
+		   strcmp(word, "||") == 0 || strcmp(word, ";") == 0 || strcmp(word, "(") == 0 ||
+		   strcmp(word, ")") == 0;
+}
+
 void init_com(tree *cmd)
 {
 	cmd->argv = NULL;
@@ -85,7 +98,7 @@ tree *simple_com(void)
 
 	init_com(cmd);
 
-	while (plst != NULL)
+	while (plst != NULL && !is_oper())
 	{
 		if (!add_arg(cmd, plst->word))
 		{

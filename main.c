@@ -26,7 +26,7 @@ void handler(int s)
 
 int main(int argc, char *argv[])
 {
-	const char *line = "echo hello world";
+	const char *line = "echo hello |world";
 
 	build_list(&plst, line);
 

@@ -1,6 +1,6 @@
 #include "list.h"
 #include "buff.h"
-#include "string.h"
+#include "strutils.h"
 #include <fcntl.h>
 #include <limits.h>
 #include <setjmp.h>
@@ -260,6 +260,7 @@ void change_list(list *head)
 			if (len == -1)
 			{
 				perror("readlink error");
+				return;
 			}
 
 			if ((size_t)len >= sizeof(path) - 1)
