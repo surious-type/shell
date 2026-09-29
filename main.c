@@ -18,16 +18,18 @@ list *plst;
 intlist *bckgrnd;
 int exit_val = 0;
 
-void handler(int s) {
-  (void)s;
-  signal(SIGINT, handler);
+void handler(int s)
+{
+	(void)s;
+	signal(SIGINT, handler);
 }
 
-int main(int argc, char *argv[]) {
-  const char *line = "cat>>file&&echo ok||echo fail";
-  build_list(&plst, line);
-  print_list(plst);
-  free_list(&plst);
+int main(int argc, char *argv[])
+{
+	const char *line = "echo 'hello | world'";
+	build_list(&plst, line);
+	print_list(plst);
+	free_list(&plst);
 
-  return 0;
+	return 0;
 }
