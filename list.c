@@ -59,12 +59,16 @@ int is_special(char c) {
   }
 }
 
+static int is_double_special(char first, char second) {
+  return (first == '>' && second == '>') || (first == '&' && second == '&') ||
+         (first == '|' && second == '|');
+}
 vertex start(char, int *, int *, list **, int *, list **);
 vertex word(char, int *, int *, list **, int *);
 vertex bracket(char, int *, int *, list **, int *);
 vertex spec(char, int *, int *, list **);
 
-void build_list(list **head, char *word) {
+static void append_token(list **head, char *word) {
   if (head == NULL || word == NULL) {
     return;
   }
@@ -98,4 +102,53 @@ void build_list(list **head, char *word) {
   current->next = node;
 }
 
+static int flush_buffer(list **head, char **buf, size_t *len,
+                        size_t *capacity) {
+  if (*len == 0)
+    return 1;
+
+  if (!buffer_finish(buf, len, capacity))
+    return 0;
+
+  append_token(head, *buf);
+  buffer_reset(buf, len, capacity);
+
+  return 1;
+}
+
+void build_list(list **head, const char *s) {
+  char *buf;
+  size_t len;
+  size_t capacity;
+  buffer_init(&buf, &len, &capacity);
+  while (*s) {
+    if (*s == ' ') {
+      if (len > 0) {
+        flush_buffer(head, &buf, &len, &capacity);
+      }
+    } else if (is_special(*s)) {
+      if (len > 0) {
+        flush_buffer(head, &buf, &len, &capacity);
+      }
+      char tmp[3];
+      tmp[0] = *s;
+      if (is_double_special(*s, s[1])) {
+        tmp[1] = s[1];
+        tmp[2] = '\0';
+        ++s;
+      } else {
+        tmp[1] = '\0';
+      }
+      append_token(head, tmp);
+
+    } else {
+      buffer_push(&buf, &len, &capacity, *s);
+    }
+    s++;
+  }
+
+  if (len > 0) {
+    flush_buffer(head, &buf, &len, &capacity);
+  }
+}
 void change_list(list *head) { (void)head; }
