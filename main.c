@@ -23,14 +23,14 @@ void handler(int s)
 
 int main(void)
 {
-	const char *line = "(pwd ; ls)";
+	const char *line = "(cat -n ; grep hello) < input.txt >> result.txt";
 	list *tokens = NULL;
 	build_list(&tokens, line);
 	plst = tokens;
 	tree *cmds = com_list();
 	print_list(tokens);
 	free_list(&tokens);
-	print_struct(cmds);
+	print_struct(cmds, 1);
 	clear_tree(cmds);
 
 	return 0;

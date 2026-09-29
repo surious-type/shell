@@ -41,7 +41,7 @@ tree *com_list(void);
 tree *conv(void);
 tree *command(void);
 tree *simple_com(void);
-void print_struct(tree *);
+void print_struct(tree *, int);
 void clear_tree(tree *);
 
 #endif

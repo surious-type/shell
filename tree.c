@@ -279,7 +279,33 @@ tree *conv(void)
 	}
 	return head;
 }
+static int parse_redirects(tree *cmd)
+{
+	if (plst != NULL && strcmp(plst->word, "<") == 0)
+	{
+		if (!in_file(cmd))
+			return 0;
+	}
 
+	if (plst != NULL && strcmp(plst->word, ">") == 0)
+	{
+		if (!out_file(cmd))
+			return 0;
+	}
+	else if (plst != NULL && strcmp(plst->word, ">>") == 0)
+	{
+		if (!out_append(cmd))
+			return 0;
+	}
+
+	if (plst != NULL && is_inout())
+	{
+		fprintf(stderr, "syntax error: лишнее перенаправление\n");
+		return 0;
+	}
+
+	return 1;
+}
 tree *command(void)
 {
 	if (plst != NULL && strcmp(plst->word, "(") == 0)
@@ -295,6 +321,11 @@ tree *command(void)
 		init_com(cmd);
 
 		cmd->psubcmd = com_list();
+		if (cmd->psubcmd == NULL)
+		{
+			clear_tree(cmd);
+			return NULL;
+		}
 		if (plst == NULL || strcmp(plst->word, ")") != 0)
 		{
 			fprintf(stderr, "syntax error: ожидалась )\n");
@@ -302,7 +333,11 @@ tree *command(void)
 			return NULL;
 		}
 		plst = plst->next;
-
+		if (!parse_redirects(cmd))
+		{
+			clear_tree(cmd);
+			return NULL;
+		}
 		return cmd;
 	}
 	return simple_com();
@@ -335,76 +370,57 @@ tree *simple_com(void)
 
 		plst = plst->next;
 	}
-	while (plst != NULL && is_inout())
+
+	if (!parse_redirects(cmd))
 	{
-		if (strcmp(plst->word, "<") == 0)
-		{
-			if (!in_file(cmd))
-			{
-				clear_tree(cmd);
-				return NULL;
-			}
-		}
-		else if (strcmp(plst->word, ">") == 0)
-		{
-			if (!out_file(cmd))
-			{
-				clear_tree(cmd);
-				return NULL;
-			}
-		}
-		else if (strcmp(plst->word, ">>") == 0)
-		{
-			if (!out_append(cmd))
-			{
-				clear_tree(cmd);
-				return NULL;
-			}
-		}
+		clear_tree(cmd);
+		return NULL;
 	}
+
 	return cmd;
 }
 
-void print_struct(tree *head)
+void print_struct(tree *head, int depth)
 {
 	if (head == NULL)
 		return;
 
 	for (int i = 1; head != NULL; i++)
 	{
-		printf("Список %d:\n", i);
+		printf("%*sСписок %d:\n", (depth - 1) * 4, "", i);
 		tree *cmd = head;
 		for (int j = 1; cmd != NULL; j++)
 		{
-			printf("    Команда: %d:\n", j);
+			printf("%*sКоманда: %d:\n", depth * 4, "", j);
+			int depth_prop = (depth + 1) * 4;
 			for (size_t a = 0; cmd->argv != NULL && cmd->argv[a] != NULL; a++)
 			{
-				printf("        argv[%zu] = [%s]\n", a, cmd->argv[a]);
+				printf("%*sargv[%zu] = [%s]\n", depth_prop, "", a, cmd->argv[a]);
 			}
 			if (cmd->infile != NULL)
 			{
-				printf("        infile = [%s]\n", cmd->infile);
+				printf("%*sinfile = [%s]\n", depth_prop, "", cmd->infile);
 			}
 			if (cmd->outfile != NULL)
 			{
-				printf("        outfile = [%s]\n", cmd->outfile);
+				printf("%*soutfile = [%s]\n", depth_prop, "", cmd->outfile);
 			}
 			if (cmd->append)
 			{
-				printf("        append = [%d]\n", cmd->append);
+				printf("%*sappend = [%d]\n", depth_prop, "", cmd->append);
 			}
-			printf("        backgrnd = %d\n", cmd->backgrnd);
+			printf("%*sbackgrnd = %d\n", depth_prop, "", cmd->backgrnd);
+			if (cmd->type == AND)
+				printf("%*stype = AND\n", depth_prop, "");
+			else if (cmd->type == OR)
+				printf("%*stype = OR\n", depth_prop, "");
+			else
+				printf("%*stype = NXT\n", depth_prop, "");
 			if (cmd->psubcmd != NULL)
 			{
-				printf("        psubcmd:\n");
-				print_struct(cmd->psubcmd);
+				printf("%*spsubcmd:\n", depth_prop, "");
+				print_struct(cmd->psubcmd, depth + 3);
 			}
-			if (cmd->type == AND)
-				printf("        type = AND\n");
-			else if (cmd->type == OR)
-				printf("        type = OR\n");
-			else
-				printf("        type = NXT\n");
 			cmd = cmd->pipe;
 		}
 		head = head->next;
@@ -415,6 +431,7 @@ void clear_tree(tree *head)
 	if (head == NULL)
 		return;
 
+	clear_tree(head->psubcmd);
 	clear_tree(head->pipe);
 	clear_tree(head->next);
 
