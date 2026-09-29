@@ -27,7 +27,7 @@ void handler(int s)
 int main(int argc, char *argv[])
 {
 	const char *line = "$HOME";
-	build_list(&plst, argv[1]);
+	build_list(&plst, line);
 	print_list(plst);
 	change_list(plst);
 	print_list(plst);

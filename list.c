@@ -241,7 +241,7 @@ void change_list(list *head)
 				char *new_home = copy_string(home);
 				if (new_home == NULL)
 				{
-					continue;
+					return;
 				}
 				free(head->word);
 				head->word = new_home;
