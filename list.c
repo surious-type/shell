@@ -1,5 +1,6 @@
 #include "list.h"
 #include "buff.h"
+#include "string.h"
 #include <fcntl.h>
 #include <limits.h>
 #include <setjmp.h>
@@ -11,19 +12,6 @@
 #include <unistd.h>
 
 extern jmp_buf begin;
-
-static char *copy_string(const char *src)
-{
-	size_t len = strlen(src);
-
-	char *dst = malloc(len + 1);
-	if (dst == NULL)
-		return NULL;
-
-	memcpy(dst, src, len + 1);
-
-	return dst;
-}
 
 void print_list(list *head)
 {
@@ -75,10 +63,6 @@ static int is_double_special(char first, char second)
 	return (first == '>' && second == '>') || (first == '&' && second == '&') ||
 		   (first == '|' && second == '|');
 }
-vertex start(char, int *, int *, list **, int *, list **);
-vertex word(char, int *, int *, list **, int *);
-vertex bracket(char, int *, int *, list **, int *);
-vertex spec(char, int *, int *, list **);
 
 static void append_token(list **head, const char *word)
 {
@@ -292,3 +276,8 @@ void change_list(list *head)
 		head = head->next;
 	}
 }
+
+vertex start(char, int *, int *, list **, int *, list **);
+vertex word(char, int *, int *, list **, int *);
+vertex bracket(char, int *, int *, list **, int *);
+vertex spec(char, int *, int *, list **);

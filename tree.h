@@ -3,18 +3,24 @@
 
 #include "list.h"
 
-typedef enum { NXT, AND, OR } next_type;
+typedef enum
+{
+	NXT,
+	AND,
+	OR
+} next_type;
 
-typedef struct Tree {
-  char **argv;
-  char *infile;
-  char *outfile;
-  int backgrnd;
-  next_type type;
-  int append;
-  struct Tree *psubcmd;
-  struct Tree *pipe;
-  struct Tree *next;
+typedef struct Tree
+{
+	char **argv;
+	char *infile;
+	char *outfile;
+	int backgrnd;
+	next_type type;
+	int append;
+	struct Tree *psubcmd;
+	struct Tree *pipe;
+	struct Tree *next;
 } tree;
 
 extern list *plst;
