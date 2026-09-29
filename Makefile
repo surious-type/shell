@@ -1,7 +1,7 @@
 PROG := shell
 CC := cc
 CFLAGS := -std=c11 -g -Wall -Wextra -Wpedantic -D_POSIX_C_SOURCE=200809L
-OBJS := main.o buff.o string.o list.o tree.o exec.o
+OBJS := main.o buff.o strutils.o list.o tree.o exec.o
 
 .PHONY: all clean run
 
