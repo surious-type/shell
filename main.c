@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	build_list(&plst, line);
 
 	tree *cmd = simple_com();
-
+	free_list(&plst);
 	print_struct(cmd);
 
 	return 0;
