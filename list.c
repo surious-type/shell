@@ -122,7 +122,16 @@ void build_list(list **head, const char *s) {
   size_t capacity;
   buffer_init(&buf, &len, &capacity);
   while (*s) {
-    if (*s == ' ') {
+    if (buf[0] == '"') {
+      if (*s == '"') {
+        for (int i = 1; i != '\0'; i++) {
+          buf[i] = buf[i + 1];
+        }
+        flush_buffer(head, &buf, &len, &capacity);
+      } else {
+        buffer_push(&buf, &len, &capacity, *s);
+      }
+    } else if (*s == ' ' || *s == '\t') {
       if (len > 0) {
         flush_buffer(head, &buf, &len, &capacity);
       }
