@@ -76,7 +76,7 @@ int is_inout(void)
 	return strcmp(plst->word, "<") == 0 || strcmp(plst->word, ">") == 0 ||
 		   strcmp(plst->word, ">>") == 0;
 }
-void in_file(tree *cmd)
+int in_file(tree *cmd)
 {
 	/* сейчас plst указывает на "<" */
 
@@ -85,7 +85,7 @@ void in_file(tree *cmd)
 	if (plst == NULL || is_oper())
 	{
 		fprintf(stderr, "syntax error: ожидалось имя файла после <\n");
-		return;
+		return 0;
 	}
 
 	cmd->infile = copy_string(plst->word);
@@ -93,10 +93,60 @@ void in_file(tree *cmd)
 	if (cmd->infile == NULL)
 	{
 		perror("malloc");
-		return;
+		return 0;
 	}
 
 	plst = plst->next;
+
+	return 1;
+}
+int out_file(tree *cmd)
+{
+	plst = plst->next;
+
+	if (plst == NULL || is_oper())
+	{
+		fprintf(stderr, "syntax error: ожидалось имя файла после >\n");
+		return 0;
+	}
+
+	cmd->outfile = copy_string(plst->word);
+
+	if (cmd->outfile == NULL)
+	{
+		perror("malloc");
+		return 0;
+	}
+
+	cmd->append = 0;
+
+	plst = plst->next;
+
+	return 1;
+}
+int out_append(tree *cmd)
+{
+	plst = plst->next;
+
+	if (plst == NULL || is_oper())
+	{
+		fprintf(stderr, "syntax error: ожидалось имя файла после >\n");
+		return 0;
+	}
+
+	cmd->outfile = copy_string(plst->word);
+
+	if (cmd->outfile == NULL)
+	{
+		perror("malloc");
+		return 0;
+	}
+
+	cmd->append = 1;
+
+	plst = plst->next;
+
+	return 1;
 }
 void init_com(tree *cmd)
 {
@@ -177,15 +227,24 @@ tree *simple_com(void)
 	{
 		if (strcmp(plst->word, "<") == 0)
 		{
-			in_file(cmd);
+			if (!in_file(cmd))
+			{
+				return NULL;
+			}
 		}
 		else if (strcmp(plst->word, ">") == 0)
 		{
-			/* позже */
+			if (!out_file(cmd))
+			{
+				return NULL;
+			}
 		}
 		else if (strcmp(plst->word, ">>") == 0)
 		{
-			/* позже */
+			if (!out_append(cmd))
+			{
+				return NULL;
+			}
 		}
 	}
 	return cmd;
@@ -198,14 +257,22 @@ void print_struct(tree *head)
 
 	for (int n = 1; head != NULL; n++)
 	{
-		printf("Команда: %d:", n);
+		printf("Команда: %d:\n", n);
 		for (size_t i = 0; head->argv != NULL && head->argv[i] != NULL; i++)
 		{
-			if (head->infile != NULL)
-			{
-				printf("  infile = [%s]\n", head->infile);
-			}
-			printf("argv[%zu] = [%s]\n", i, head->argv[i]);
+			printf("    argv[%zu] = [%s]\n", i, head->argv[i]);
+		}
+		if (head->infile != NULL)
+		{
+			printf("    infile = [%s]\n", head->infile);
+		}
+		if (head->outfile != NULL)
+		{
+			printf("    outfile = [%s]\n", head->outfile);
+		}
+		if (head->append)
+		{
+			printf("    append = [%d]\n", head->append);
 		}
 		head = head->pipe;
 	}

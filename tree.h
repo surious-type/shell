@@ -26,9 +26,9 @@ typedef struct Tree
 extern list *plst;
 
 void err_file(void);
-void in_file(tree *);
-void out_file(tree *);
-void out_append(tree *);
+int in_file(tree *);
+int out_file(tree *);
+int out_append(tree *);
 void error(char *, char *);
 int is_oper(void);
 int is_next(void);
