@@ -174,7 +174,7 @@ tree *com_list(void)
 	{
 		plst = plst->next;
 
-		if (plst->next == NULL)
+		if (plst == NULL)
 		{
 			// если завершающий ; считается нормой, то break, иначе нужно выдавать ошибку
 			break;
