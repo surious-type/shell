@@ -1,7 +1,6 @@
 #include "tree.h"
 #include "strutils.h"
 #include <fcntl.h>
-#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,27 +8,7 @@
 #include <unistd.h>
 
 #define SIZE 5
-/*
-typedef enum
-{
-	NXT,
-	AND,
-	OR
-} next_type;
 
-typedef struct Tree
-{
-	char **argv;
-	char *infile;
-	char *outfile;
-	int backgrnd;
-	next_type type;
-	int append;
-	struct Tree *psubcmd;
-	struct Tree *pipe;
-	struct Tree *next;
-} tree;
-*/
 static int add_arg(tree *cmd, const char *word)
 {
 	size_t argc = 0;
@@ -78,8 +57,6 @@ int is_inout(void)
 }
 int in_file(tree *cmd)
 {
-	/* сейчас plst указывает на "<" */
-
 	plst = plst->next;
 
 	if (plst == NULL || is_oper())
@@ -161,9 +138,37 @@ void init_com(tree *cmd)
 	cmd->next = NULL;
 }
 tree *com_sh(void);
-tree *com_list(void)
+static tree *and_or(void)
 {
 	tree *head = conv();
+
+	if (head == NULL)
+		return NULL;
+
+	tree *current = head;
+
+	while (plst != NULL && (strcmp(plst->word, "&&") == 0 || strcmp(plst->word, "||") == 0))
+	{
+		if (strcmp(plst->word, "&&") == 0)
+		{
+			current->type = AND;
+		}
+		else
+		{
+			current->type = OR;
+		}
+
+		plst = plst->next;
+
+		head = conv();
+		current->next = head;
+	}
+
+	return head;
+}
+tree *com_list(void)
+{
+	tree *head = and_or();
 
 	if (head == NULL)
 		return NULL;
@@ -191,7 +196,9 @@ tree *com_list(void)
 		current = next_conv;
 	}
 
-	return head;
+	tree *next = and_or();
+
+	return next;
 }
 tree *conv(void)
 {
