@@ -26,12 +26,13 @@ void handler(int s)
 
 int main(int argc, char *argv[])
 {
-	const char *line = "$HOME $USER $EUID $SHELL";
+	const char *line = "echo hello world";
+
 	build_list(&plst, line);
-	print_list(plst);
-	change_list(plst);
-	print_list(plst);
-	free_list(&plst);
+
+	tree *cmd = simple_com();
+
+	print_struct(cmd);
 
 	return 0;
 }

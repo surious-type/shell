@@ -1,7 +1,7 @@
 PROG := shell
 CC := cc
 CFLAGS := -std=c11 -g -Wall -Wextra -Wpedantic -D_POSIX_C_SOURCE=200809L
-OBJS := main.o buff.o list.o tree.o exec.o
+OBJS := main.o buff.o string.o list.o tree.o exec.o
 
 .PHONY: all clean run
 
@@ -11,9 +11,10 @@ $(PROG): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $@
 
 main.o: main.c buff.h list.h tree.h exec.h
+string.o: string.c string.h
 buff.o: buff.c buff.h
-list.o: list.c list.h buff.h
-tree.o: tree.c tree.h list.h
+list.o: list.c list.h buff.h string.h
+tree.o: tree.c tree.h list.h string.h
 exec.o: exec.c exec.h tree.h
 
 %.o: %.c

@@ -46,8 +46,12 @@ static int add_arg(tree *cmd, const char *word)
 		return 0;
 
 	cmd->argv = tmp;
-
 	cmd->argv[argc] = copy_string(word);
+	if (cmd->argv[argc] == NULL)
+	{
+		return 0;
+	}
+	cmd->argv[argc + 1] = NULL;
 
 	return 1;
 }
@@ -68,15 +72,40 @@ tree *com_sh(void);
 tree *com_list(void);
 tree *conv(void);
 tree *command(void);
+
 tree *simple_com(void)
 {
+	tree *cmd = malloc(sizeof(*cmd));
+
+	if (cmd == NULL)
+	{
+		perror("malloc");
+		return NULL;
+	}
+
+	init_com(cmd);
+
+	while (plst != NULL)
+	{
+		if (!add_arg(cmd, plst->word))
+		{
+			return NULL;
+		}
+
+		plst = plst->next;
+	}
+
+	return cmd;
 }
+
 void print_struct(tree *head)
 {
-	while (head != NULL)
+	if (head == NULL)
+		return;
+
+	for (size_t i = 0; head->argv != NULL && head->argv[i] != NULL; i++)
 	{
-		printf("[%s]\n", *head->argv);
-		head = head->next;
+		printf("argv[%zu] = [%s]\n", i, head->argv[i]);
 	}
 }
 void clear_tree(tree *);
