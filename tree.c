@@ -160,30 +160,6 @@ static tree *and_or(void)
 
 		plst = plst->next;
 
-		head = conv();
-		current->next = head;
-	}
-
-	return head;
-}
-tree *com_list(void)
-{
-	tree *head = and_or();
-
-	if (head == NULL)
-		return NULL;
-
-	tree *current = head;
-
-	while (plst != NULL && strcmp(plst->word, ";") == 0)
-	{
-		plst = plst->next;
-
-		if (plst == NULL)
-		{
-			// если завершающий ; считается нормой, то break, иначе нужно выдавать ошибку
-			break;
-		}
 		tree *next_conv = conv();
 
 		if (next_conv == NULL)
@@ -196,9 +172,42 @@ tree *com_list(void)
 		current = next_conv;
 	}
 
-	tree *next = and_or();
+	return head;
+}
+tree *com_list(void)
+{
+	tree *head = and_or();
 
-	return next;
+	if (head == NULL)
+		return NULL;
+
+	tree *current = head;
+	while (current->next != NULL)
+	{
+		current = current->next;
+	}
+	while (plst != NULL && strcmp(plst->word, ";") == 0)
+	{
+		plst = plst->next;
+
+		if (plst == NULL)
+		{
+			// если завершающий ; считается нормой, то break, иначе нужно выдавать ошибку
+			break;
+		}
+		tree *next = and_or();
+
+		if (next == NULL)
+		{
+			clear_tree(head);
+			return NULL;
+		}
+
+		current->next = next;
+		current = next;
+	}
+
+	return head;
 }
 tree *conv(void)
 {
@@ -321,6 +330,12 @@ void print_struct(tree *head)
 			{
 				printf("        append = [%d]\n", cmd->append);
 			}
+			if (cmd->type == AND)
+				printf("        type = AND\n");
+			else if (cmd->type == OR)
+				printf("        type = OR\n");
+			else
+				printf("        type = NXT\n");
 			cmd = cmd->pipe;
 		}
 		head = head->next;
