@@ -282,6 +282,29 @@ tree *conv(void)
 
 tree *command(void)
 {
+	if (plst != NULL && strcmp(plst->word, "(") == 0)
+	{
+		plst = plst->next;
+		tree *cmd = malloc(sizeof(*cmd));
+		if (cmd == NULL)
+		{
+			perror("malloc");
+			return NULL;
+		}
+
+		init_com(cmd);
+
+		cmd->psubcmd = com_list();
+		if (plst == NULL || strcmp(plst->word, ")") != 0)
+		{
+			fprintf(stderr, "syntax error: ожидалась )\n");
+			clear_tree(cmd);
+			return NULL;
+		}
+		plst = plst->next;
+
+		return cmd;
+	}
 	return simple_com();
 }
 
@@ -371,6 +394,11 @@ void print_struct(tree *head)
 				printf("        append = [%d]\n", cmd->append);
 			}
 			printf("        backgrnd = %d\n", cmd->backgrnd);
+			if (cmd->psubcmd != NULL)
+			{
+				printf("        psubcmd:\n");
+				print_struct(cmd->psubcmd);
+			}
 			if (cmd->type == AND)
 				printf("        type = AND\n");
 			else if (cmd->type == OR)
