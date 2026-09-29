@@ -121,16 +121,18 @@ void build_list(list **head, const char *s) {
   size_t len;
   size_t capacity;
   buffer_init(&buf, &len, &capacity);
+  char qoute = '\0';
+
   while (*s) {
-    if (buf[0] == '"') {
-      if (*s == '"') {
-        for (int i = 1; i != '\0'; i++) {
-          buf[i] = buf[i + 1];
-        }
+    if (qoute != '\0') {
+      if (*s == qoute) {
         flush_buffer(head, &buf, &len, &capacity);
+        qoute = '\0';
       } else {
         buffer_push(&buf, &len, &capacity, *s);
       }
+    } else if (*s == '"' || *s == '\'') {
+      quote = *s;
     } else if (*s == ' ' || *s == '\t') {
       if (len > 0) {
         flush_buffer(head, &buf, &len, &capacity);
