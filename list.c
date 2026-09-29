@@ -146,7 +146,20 @@ void build_list(list **head, const char *s)
 
 	while (*s)
 	{
-		if (quote != '\0')
+		if (*s == '\\')
+		{
+			if (s[1] == '\0')
+			{
+				fprintf(stderr, "lexical error: нет символа после \\\n");
+				buffer_reset(&buf, &len, &capacity);
+				free_list(head);
+				return;
+			}
+			++s;
+			buffer_push(&buf, &len, &capacity, *s);
+			token_started = 1;
+		}
+		else if (quote != '\0')
 		{
 			if (*s == quote)
 			{
