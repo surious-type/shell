@@ -60,17 +60,39 @@ static int redirect_io(tree *cmd)
 
 	return 1;
 }
+static int is_exit(tree *cmd)
+{
+	return cmd != NULL && cmd->argv != NULL && cmd->argv[0] != NULL &&
+		   strcmp(cmd->argv[0], "exit") == 0;
+}
+static int is_cd(tree *cmd)
+{
+	return cmd != NULL && cmd->argv != NULL && cmd->argv[0] != NULL &&
+		   strcmp(cmd->argv[0], "cd") == 0;
+}
+
 static void run_node(tree *cmd)
 {
 	if (!redirect_io(cmd))
-	{
 		_exit(1);
-	}
+
 	if (cmd->psubcmd != NULL)
 	{
 		int status = exec_com_sh(cmd->psubcmd);
 		_exit(status);
 	}
+
+	if (is_cd(cmd))
+	{
+		int status = exec_cd(cmd);
+		_exit(status);
+	}
+
+	if (is_exit(cmd))
+	{
+		_exit(0);
+	}
+
 	execvp(cmd->argv[0], cmd->argv);
 
 	perror(cmd->argv[0]);
@@ -303,16 +325,6 @@ void clear_intlist(intlist *head)
 		head = head->next;
 		free(tmp);
 	}
-}
-static int is_exit(tree *cmd)
-{
-	return cmd != NULL && cmd->argv != NULL && cmd->argv[0] != NULL &&
-		   strcmp(cmd->argv[0], "exit") == 0;
-}
-static int is_cd(tree *cmd)
-{
-	return cmd != NULL && cmd->argv != NULL && cmd->argv[0] != NULL &&
-		   strcmp(cmd->argv[0], "cd") == 0;
 }
 int exec_cd(tree *cmd)
 {
