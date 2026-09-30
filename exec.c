@@ -304,6 +304,11 @@ void clear_intlist(intlist *head)
 		free(tmp);
 	}
 }
+static int is_exit(tree *cmd)
+{
+	return cmd != NULL && cmd->argv != NULL && cmd->argv[0] != NULL &&
+		   strcmp(cmd->argv[0], "exit") == 0;
+}
 static int is_cd(tree *cmd)
 {
 	return cmd != NULL && cmd->argv != NULL && cmd->argv[0] != NULL &&
@@ -346,6 +351,8 @@ static int exec_foreground(tree *cmd)
 {
 	if (cmd->pipe == NULL && is_cd(cmd))
 		return exec_cd(cmd);
+	if (cmd->pipe == NULL && is_exit(cmd))
+		exit(0);
 	if (cmd->pipe != NULL)
 		return exec_pipeline(cmd);
 	return exec_external(cmd);
