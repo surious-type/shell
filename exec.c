@@ -94,85 +94,97 @@ static int exec_external(tree *cmd) {
 
   return 1;
 }
-static int exec_pipeline2(tree *cmd) {
-  tree *second = cmd->pipe;
+static int exec_pipeline(tree *cmd) {
+  int prev_read = -1;
+  pid_t last_pid = -1;
+  int count = 0;
 
-  int fd[2];
+  tree *current = cmd;
 
-  if (pipe(fd) < 0) {
-    perror("pipe");
-    return 1;
-  }
+  while (current != NULL) {
+    int fd[2] = {-1, -1};
+    int has_next = current->pipe != NULL;
 
-  pid_t first_pid = fork();
-
-  if (first_pid < 0) {
-    perror("fork");
-    close(fd[0]);
-    close(fd[1]);
-    return 1;
-  }
-
-  if (first_pid == 0) {
-    /*
-     * stdout первой команды отправляем
-     * в канал.
-     */
-    if (dup2(fd[1], STDOUT_FILENO) < 0) {
-      perror("dup2");
-      _exit(1);
+    if (has_next) {
+      if (pipe(fd) < 0) {
+        perror("pipe");
+        return 1;
+      }
     }
 
-    close(fd[0]);
-    close(fd[1]);
+    pid_t pid = fork();
 
-    run_child(cmd);
-  }
+    if (pid < 0) {
+      perror("fork");
 
-  pid_t second_pid = fork();
+      if (prev_read != -1)
+        close(prev_read);
 
-  if (second_pid < 0) {
-    perror("fork");
-    close(fd[0]);
-    close(fd[1]);
-    waitpid(first_pid, NULL, 0);
-    return 1;
-  }
+      if (has_next) {
+        close(fd[0]);
+        close(fd[1]);
+      }
 
-  if (second_pid == 0) {
-    /*
-     * stdin второй команды берём
-     * из канала.
-     */
-    if (dup2(fd[0], STDIN_FILENO) < 0) {
-      perror("dup2");
-      _exit(1);
+      return 1;
     }
 
-    close(fd[0]);
-    close(fd[1]);
+    if (pid == 0) {
+      if (prev_read != -1) {
+        if (dup2(prev_read, STDIN_FILENO) < 0) {
+          perror("dup2");
+          _exit(1);
+        }
+      }
 
-    run_child(second);
+      if (has_next) {
+        if (dup2(fd[1], STDOUT_FILENO) < 0) {
+          perror("dup2");
+          _exit(1);
+        }
+      }
+
+      if (prev_read != -1)
+        close(prev_read);
+
+      if (has_next) {
+        close(fd[0]);
+        close(fd[1]);
+      }
+
+      run_child(current);
+    }
+
+    last_pid = pid;
+    count++;
+
+    if (prev_read != -1)
+      close(prev_read);
+
+    if (has_next) {
+      close(fd[1]);
+      prev_read = fd[0];
+    } else {
+      prev_read = -1;
+    }
+
+    current = current->pipe;
   }
 
-  /*
-   * Shell сам ничего через этот pipe
-   * не читает и не пишет.
-   */
-  close(fd[0]);
-  close(fd[1]);
+  int last_status = 1;
 
-  int first_status;
-  int second_status;
+  for (int i = 0; i < count; i++) {
+    int status;
+    pid_t pid = wait(&status);
 
-  waitpid(first_pid, &first_status, 0);
-  waitpid(second_pid, &second_status, 0);
+    if (pid == last_pid)
+      last_status = status;
+  }
 
-  if (WIFEXITED(second_status))
-    return WEXITSTATUS(second_status);
+  if (WIFEXITED(last_status))
+    return WEXITSTATUS(last_status);
 
-  if (WIFSIGNALED(second_status))
-    return 128 + WTERMSIG(second_status);
+  if (WIFSIGNALED(last_status))
+    return 128 + WTERMSIG(last_status);
 
   return 1;
 }
@@ -181,6 +193,6 @@ int exec_com_sh(tree *cmd) {
     return 1;
 
   if (cmd->pipe != NULL)
-    return exec_pipeline2(cmd);
+    return exec_pipeline(cmd);
   return exec_external(cmd);
 }
