@@ -39,6 +39,7 @@ int main(void)
 		printf("exit status = %d\n", status);
 	}
 	clear_tree(cmds);
-
+	clear_zombie(&bckgrnd);
+	clear_intlist(bckgrnd);
 	return 0;
 }

@@ -127,7 +127,7 @@ static int exec_pipeline(tree *cmd)
 	pid_t last_pid = -1;
 	int count = 0;
 	tree *current = cmd;
-	pid_t *pids = malloc((count + 1) * sizeof(*pids));
+	pid_t *pids = NULL;
 
 	if (pids == NULL)
 	{
@@ -248,6 +248,67 @@ static int exec_pipeline(tree *cmd)
 
 	return 1;
 }
+void add_elem(intlist **head, int pid)
+{
+	intlist *new_elem = malloc(sizeof(*new_elem));
+
+	if (new_elem == NULL)
+	{
+		perror("malloc");
+		return;
+	}
+
+	new_elem->pid = pid;
+	new_elem->next = *head;
+
+	*head = new_elem;
+}
+void clear_zombie(intlist **head)
+{
+	intlist *current = *head;
+	intlist *prev = NULL;
+
+	while (current != NULL)
+	{
+		int status;
+
+		pid_t result = waitpid(current->pid, &status, WNOHANG);
+
+		if (result == current->pid)
+		{
+			printf("[background pid %d done]\n", current->pid);
+
+			intlist *dead = current;
+
+			if (prev == NULL)
+			{
+				*head = current->next;
+				current = *head;
+			}
+			else
+			{
+				prev->next = current->next;
+				current = current->next;
+			}
+
+			free(dead);
+		}
+		else
+		{
+			prev = current;
+			current = current->next;
+		}
+	}
+}
+void clear_intlist(intlist *head)
+{
+	while (head != NULL)
+	{
+		intlist *tmp = head;
+		head = head->next;
+		free(tmp);
+	}
+}
 static int exec_foreground(tree *cmd)
 {
 	if (cmd->pipe != NULL)
@@ -299,6 +360,7 @@ static int exec_background_group(tree *first, tree *last)
 	}
 
 	printf("[background pid %d]\n", pid);
+	add_elem(&bckgrnd, pid);
 	return 0;
 }
 static int exec_group(tree *first, tree *last)

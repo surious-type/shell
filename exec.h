@@ -3,9 +3,10 @@
 
 #include "tree.h"
 
-typedef struct backgrndList {
-  int pid;
-  struct backgrndList *next;
+typedef struct backgrndList
+{
+	int pid;
+	struct backgrndList *next;
 } intlist;
 
 extern intlist *bckgrnd;
