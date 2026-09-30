@@ -21,7 +21,7 @@ void handler(int s) {
 }
 
 int main(void) {
-  const char *line = "(false || echo YES) | cat";
+  const char *line = "false && echo A &";
   list *tokens = NULL;
   build_list(&tokens, line);
   plst = tokens;

@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <malloc.h>
 #include <setjmp.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -197,10 +198,53 @@ static int exec_pipeline(tree *cmd) {
 
   return 1;
 }
+static int exec_background(tree *cmd) {
+  pid_t pid = fork();
+
+  if (pid < 0) {
+    perror("fork");
+    return 1;
+  }
+
+  if (pid == 0) {
+    signal(SIGINT, SIG_IGN);
+    int fd = open("/dev/null", O_RDONLY);
+
+    if (fd < 0) {
+      perror("/dev/null");
+      _exit(1);
+    }
+
+    if (dup2(fd, STDIN_FILENO) < 0) {
+      perror("dup2");
+      close(fd);
+      _exit(1);
+    }
+
+    close(fd);
+
+    int status;
+
+    if (cmd->pipe != NULL)
+      status = exec_pipeline(cmd);
+    else
+      status = exec_external(cmd);
+
+    _exit(status);
+  }
+
+  printf("[background pid %d]\n", pid);
+
+  return 0;
+}
 static int exec_one(tree *cmd) {
-  if (cmd->pipe != NULL)
-    return exec_pipeline(cmd);
-  return exec_external(cmd);
+  if (cmd->backgrnd) {
+    return exec_background(cmd);
+  } else {
+    if (cmd->pipe != NULL)
+      return exec_pipeline(cmd);
+    return exec_external(cmd);
+  }
 }
 int exec_com_sh(tree *cmd) {
   if (cmd == NULL)
