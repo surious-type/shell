@@ -99,15 +99,20 @@ int main(void)
 
 		tree *cmds = com_sh();
 
+		print_list(tokens);
+
 		free_list(&tokens);
 
 		if (cmds == NULL)
 			continue;
 
+		print_struct(cmds, 1);
 		int status = exec_com_sh(cmds);
 		exit_val = status;
 
 		clear_tree(cmds);
+
+		// print_intlist(bckgrnd);
 	}
 
 	clear_zombie(&bckgrnd);

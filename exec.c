@@ -304,8 +304,48 @@ void clear_intlist(intlist *head)
 		free(tmp);
 	}
 }
+static int is_cd(tree *cmd)
+{
+	return cmd != NULL && cmd->argv != NULL && cmd->argv[0] != NULL &&
+		   strcmp(cmd->argv[0], "cd") == 0;
+}
+int exec_cd(tree *cmd)
+{
+	if (cmd->argv[1] != NULL && cmd->argv[2] != NULL)
+	{
+		fprintf(stderr, "cd: слишком много аргументов\n");
+		return 1;
+	}
+
+	const char *path;
+
+	if (cmd->argv[1] == NULL)
+	{
+		path = getenv("HOME");
+
+		if (path == NULL)
+		{
+			fprintf(stderr, "cd: HOME не задан\n");
+			return 1;
+		}
+	}
+	else
+	{
+		path = cmd->argv[1];
+	}
+
+	if (chdir(path) < 0)
+	{
+		perror("cd");
+		return 1;
+	}
+
+	return 0;
+}
 static int exec_foreground(tree *cmd)
 {
+	if (cmd->pipe == NULL && is_cd(cmd))
+		return exec_cd(cmd);
 	if (cmd->pipe != NULL)
 		return exec_pipeline(cmd);
 	return exec_external(cmd);
