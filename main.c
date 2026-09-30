@@ -21,7 +21,7 @@ void handler(int s) {
 }
 
 int main(void) {
-  const char *line = "echoasdasdhello";
+  const char *line = "echo world >> out.txt";
   list *tokens = NULL;
   build_list(&tokens, line);
   plst = tokens;
