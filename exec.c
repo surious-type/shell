@@ -1,6 +1,7 @@
 #include "exec.h"
 #include <errno.h>
 #include <fcntl.h>
+#include <malloc.h>
 #include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,7 +67,11 @@ static void run_node(tree *cmd) {
   _exit(127);
 }
 static int exec_external(tree *cmd) {
-  if (cmd == NULL || cmd->argv == NULL || cmd->argv[0] == NULL) {
+  if (cmd == NULL) {
+    return 1;
+  }
+
+  if (cmd->psubcmd == NULL && (cmd->argv == NULL || cmd->argv[0] == NULL)) {
     return 1;
   }
 
@@ -192,7 +197,7 @@ static int exec_pipeline(tree *cmd) {
 
   return 1;
 }
-int exec_one(tree *cmd) {
+static int exec_one(tree *cmd) {
   if (cmd->pipe != NULL)
     return exec_pipeline(cmd);
   return exec_external(cmd);
