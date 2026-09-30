@@ -21,25 +21,97 @@ void handler(int s)
 	(void)s;
 	signal(SIGINT, handler);
 }
+static int read_line(char **line)
+{
+	char *buf;
+	size_t len;
+	size_t capacity;
 
+	buffer_init(&buf, &len, &capacity);
+
+	int c;
+
+	while ((c = getchar()) != '\n' && c != EOF)
+	{
+		if (!buffer_push(&buf, &len, &capacity, (char)c))
+		{
+			perror("realloc");
+			buffer_reset(&buf, &len, &capacity);
+			return -1;
+		}
+	}
+
+	/*
+	 * Ctrl-D
+	 */
+	if (c == EOF && len == 0)
+	{
+		buffer_reset(&buf, &len, &capacity);
+		return 0;
+	}
+
+	if (!buffer_finish(&buf, &len, &capacity))
+	{
+		perror("realloc");
+		buffer_reset(&buf, &len, &capacity);
+		return -1;
+	}
+
+	*line = buf;
+	return 1;
+}
 int main(void)
 {
-	const char *line = "(false && echo A &) || echo C &";
-	list *tokens = NULL;
-	build_list(&tokens, line);
-	plst = tokens;
-	tree *cmds = com_sh();
-	print_list(tokens);
-	free_list(&tokens);
+	signal(SIGINT, handler);
 
-	if (cmds != NULL)
+	while (1)
 	{
-		print_struct(cmds, 1);
+		clear_zombie(&bckgrnd);
+
+		printf("$ ");
+		fflush(stdout);
+
+		char *line = NULL;
+
+		int read_status = read_line(&line);
+
+		if (read_status == 0)
+		{
+			printf("\n");
+			break;
+		}
+
+		if (read_status < 0)
+			break;
+
+		list *tokens = NULL;
+
+		build_list(&tokens, line);
+
+		free(line);
+
+		if (tokens == NULL)
+			continue;
+
+		change_list(tokens);
+
+		plst = tokens;
+
+		tree *cmds = com_sh();
+
+		free_list(&tokens);
+
+		if (cmds == NULL)
+			continue;
+
 		int status = exec_com_sh(cmds);
-		printf("exit status = %d\n", status);
+		exit_val = status;
+
+		clear_tree(cmds);
 	}
-	clear_tree(cmds);
+
 	clear_zombie(&bckgrnd);
 	clear_intlist(bckgrnd);
-	return 0;
+
+	return exit_val;
 }

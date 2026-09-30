@@ -129,11 +129,6 @@ static int exec_pipeline(tree *cmd)
 	tree *current = cmd;
 	pid_t *pids = NULL;
 
-	if (pids == NULL)
-	{
-		perror("malloc");
-		return 1;
-	}
 	while (current != NULL)
 	{
 		int fd[2] = {-1, -1};
