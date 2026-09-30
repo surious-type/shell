@@ -15,23 +15,26 @@ list *plst;
 intlist *bckgrnd;
 int exit_val = 0;
 
-void handler(int s)
-{
-	(void)s;
-	signal(SIGINT, handler);
+void handler(int s) {
+  (void)s;
+  signal(SIGINT, handler);
 }
 
-int main(void)
-{
-	const char *line = "pwd && )";
-	list *tokens = NULL;
-	build_list(&tokens, line);
-	plst = tokens;
-	tree *cmds = com_sh();
-	print_list(tokens);
-	free_list(&tokens);
-	print_struct(cmds, 1);
-	clear_tree(cmds);
+int main(void) {
+  const char *line = "echoasdasdhello";
+  list *tokens = NULL;
+  build_list(&tokens, line);
+  plst = tokens;
+  tree *cmds = com_sh();
+  print_list(tokens);
+  free_list(&tokens);
 
-	return 0;
+  if (cmds != NULL) {
+    print_struct(cmds, 1);
+    int status = exec_com_sh(cmds);
+    printf("exit status = %d\n", status);
+  }
+  clear_tree(cmds);
+
+  return 0;
 }
