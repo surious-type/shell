@@ -126,9 +126,14 @@ static int exec_pipeline(tree *cmd)
 	int prev_read = -1;
 	pid_t last_pid = -1;
 	int count = 0;
-
 	tree *current = cmd;
+	pid_t *pids = malloc((count + 1) * sizeof(*pids));
 
+	if (pids == NULL)
+	{
+		perror("malloc");
+		return 1;
+	}
 	while (current != NULL)
 	{
 		int fd[2] = {-1, -1};
@@ -192,9 +197,16 @@ static int exec_pipeline(tree *cmd)
 
 			run_node(current);
 		}
+		pid_t *tmp = realloc(&pids, (count + 1) * sizeof(*pids));
 
+		if (tmp == NULL)
+		{
+			perror("malloc");
+			return 1;
+		}
+		pids = tmp;
+		pids[count++] = pid;
 		last_pid = pid;
-		count++;
 
 		if (prev_read != -1)
 			close(prev_read);
@@ -217,12 +229,17 @@ static int exec_pipeline(tree *cmd)
 	for (int i = 0; i < count; i++)
 	{
 		int status;
-		pid_t pid = wait(&status);
 
-		if (pid == last_pid)
+		if (waitpid(pids[i], &status, 0) < 0)
+		{
+			perror("waitpid");
+			continue;
+		}
+
+		if (pids[i] == last_pid)
 			last_status = status;
 	}
-
+	free(pids);
 	if (WIFEXITED(last_status))
 		return WEXITSTATUS(last_status);
 
