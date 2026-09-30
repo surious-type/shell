@@ -197,11 +197,11 @@ static int exec_pipeline(tree *cmd)
 
 			run_node(current);
 		}
-		pid_t *tmp = realloc(&pids, (count + 1) * sizeof(*pids));
+		pid_t *tmp = realloc(pids, (count + 1) * sizeof(*pids));
 
 		if (tmp == NULL)
 		{
-			perror("malloc");
+			perror("realloc");
 			return 1;
 		}
 		pids = tmp;
