@@ -213,67 +213,114 @@ void build_list(list **head, const char *s)
 	}
 }
 
-static int replace_word(list *node, const char *value)
+static int append_string(char **buf, size_t *len, size_t *capacity, const char *str)
 {
-	if (value == NULL)
+	while (*str != '\0')
 	{
-		return 0;
+		if (!buffer_push(buf, len, capacity, *str))
+			return 0;
+
+		str++;
 	}
-	char *new_value = copy_string(value);
-	if (new_value == NULL)
-	{
-		return 0;
-	}
-	free(node->word);
-	node->word = new_value;
+
 	return 1;
 }
+static int expand_word(list *node)
+{
+	char *buf;
+	size_t len;
+	size_t capacity;
 
+	buffer_init(&buf, &len, &capacity);
+
+	const char *s = node->word;
+
+	while (*s != '\0')
+	{
+		const char *value = NULL;
+		size_t skip = 0;
+
+		char euid[32];
+		char shell[1024];
+
+		if (strncmp(s, "$HOME", 5) == 0)
+		{
+			value = getenv("HOME");
+			skip = 5;
+		}
+		else if (strncmp(s, "$USER", 5) == 0)
+		{
+			value = getlogin();
+
+			if (value == NULL)
+				value = getenv("USER");
+
+			skip = 5;
+		}
+		else if (strncmp(s, "$EUID", 5) == 0)
+		{
+			snprintf(euid, sizeof(euid), "%lu", (unsigned long)geteuid());
+
+			value = euid;
+			skip = 5;
+		}
+		else if (strncmp(s, "$SHELL", 6) == 0)
+		{
+			ssize_t n = readlink("/proc/self/exe", shell, sizeof(shell) - 1);
+
+			if (n < 0)
+			{
+				perror("readlink");
+				buffer_reset(&buf, &len, &capacity);
+				return 0;
+			}
+
+			shell[n] = '\0';
+
+			value = shell;
+			skip = 6;
+		}
+
+		if (value != NULL)
+		{
+			if (!append_string(&buf, &len, &capacity, value))
+			{
+				buffer_reset(&buf, &len, &capacity);
+				return 0;
+			}
+
+			s += skip;
+		}
+		else
+		{
+			if (!buffer_push(&buf, &len, &capacity, *s))
+			{
+				buffer_reset(&buf, &len, &capacity);
+				return 0;
+			}
+
+			s++;
+		}
+	}
+
+	if (!buffer_finish(&buf, &len, &capacity))
+	{
+		buffer_reset(&buf, &len, &capacity);
+		return 0;
+	}
+
+	free(node->word);
+	node->word = buf;
+
+	return 1;
+}
 void change_list(list *head)
 {
 	while (head != NULL)
 	{
-		if (strcmp(head->word, "$HOME") == 0)
-		{
-			const char *home = getenv("HOME");
-			if (!replace_word(head, home))
-				return;
-		}
-		else if (strcmp(head->word, "$USER") == 0)
-		{
-			const char *user = getlogin();
-			if (!replace_word(head, user))
-				return;
-		}
-		else if (strcmp(head->word, "$EUID") == 0)
-		{
-			char euid[32];
-			snprintf(euid, sizeof(euid), "%lu", (unsigned long)geteuid());
-			if (!replace_word(head, euid))
-				return;
-		}
-		else if (strcmp(head->word, "$SHELL") == 0)
-		{
-			char path[1024];
-			ssize_t len = readlink("/proc/self/exe", path, sizeof(path) - 1);
+		if (!expand_word(head))
+			return;
 
-			if (len == -1)
-			{
-				perror("readlink error");
-				return;
-			}
-
-			if ((size_t)len >= sizeof(path) - 1)
-			{
-				fprintf(stderr, "Путь к shell слишком длинный\n");
-				return;
-			}
-
-			path[len] = '\0';
-
-			if (!replace_word(head, path))
-				return;
-		}
 		head = head->next;
 	}
 }
