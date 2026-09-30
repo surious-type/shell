@@ -52,9 +52,13 @@ static int redirect_io(tree *cmd) {
 
   return 1;
 }
-static void run_child(tree *cmd) {
+static void run_node(tree *cmd) {
   if (!redirect_io(cmd)) {
     _exit(1);
+  }
+  if (cmd->psubcmd != NULL) {
+    int status = exec_com_sh(cmd->psubcmd);
+    _exit(status);
   }
   execvp(cmd->argv[0], cmd->argv);
 
@@ -74,7 +78,7 @@ static int exec_external(tree *cmd) {
   }
 
   if (pid == 0) {
-    run_child(cmd);
+    run_node(cmd);
   }
 
   int status;
@@ -151,7 +155,7 @@ static int exec_pipeline(tree *cmd) {
         close(fd[1]);
       }
 
-      run_child(current);
+      run_node(current);
     }
 
     last_pid = pid;
