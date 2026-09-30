@@ -21,7 +21,7 @@ void handler(int s) {
 }
 
 int main(void) {
-  const char *line = "echo hello | cat | wc -c > result.txt";
+  const char *line = "echo hello | grep xyz || echo NOT_FOUND";
   list *tokens = NULL;
   build_list(&tokens, line);
   plst = tokens;

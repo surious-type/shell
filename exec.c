@@ -188,11 +188,30 @@ static int exec_pipeline(tree *cmd) {
 
   return 1;
 }
+int exec_one(tree *cmd) {
+  if (cmd->pipe != NULL)
+    return exec_pipeline(cmd);
+  return exec_external(cmd);
+}
 int exec_com_sh(tree *cmd) {
   if (cmd == NULL)
     return 1;
 
-  if (cmd->pipe != NULL)
-    return exec_pipeline(cmd);
-  return exec_external(cmd);
+  int status = exec_one(cmd);
+  tree *current = cmd;
+
+  while (current->next != NULL) {
+    next_type type = current->type;
+    current = current->next;
+
+    if (type == NXT) {
+      status = exec_one(current);
+    } else if (type == AND && status == 0) {
+      status = exec_one(current);
+    } else if (type == OR && status != 0) {
+      status = exec_one(current);
+    }
+  }
+
+  return status;
 }
